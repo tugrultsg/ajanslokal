@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -33,6 +32,9 @@ export const metadata: Metadata = {
   },
 };
 
+// GA4 Measurement ID
+const GA_MEASUREMENT_ID = "G-QDENMGV7VM";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,19 +43,21 @@ export default function RootLayout({
   return (
     <html lang="tr" className={plusJakartaSans.variable}>
       <head>
-        {/* Google Analytics 4 */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-QDENMGV7VM"
-          strategy="afterInteractive"
+        {/* Google Analytics 4 - Direct Script */}
+        <script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
         />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-QDENMGV7VM');
-          `}
-        </Script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${GA_MEASUREMENT_ID}');
+            `,
+          }}
+        />
       </head>
       <body className={plusJakartaSans.className}>
         {children}
