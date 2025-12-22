@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -39,6 +40,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className={plusJakartaSans.variable}>
+      <head>
+        {/* Google Analytics 4 */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-QDENMGV7VM"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-QDENMGV7VM');
+          `}
+        </Script>
+      </head>
       <body className={plusJakartaSans.className}>
         {children}
       </body>
