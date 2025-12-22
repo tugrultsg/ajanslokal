@@ -46,12 +46,30 @@ export default function Contact() {
 
     const onSubmit = async (data: ContactFormData) => {
         setIsSubmitting(true);
-        // Simulate form submission
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        console.log("Form data:", data);
-        setIsSubmitting(false);
-        setIsSuccess(true);
-        reset();
+
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Bir hata oluştu');
+            }
+
+            setIsSuccess(true);
+            reset();
+        } catch (error) {
+            console.error('Form submission error:', error);
+            alert('Mesajınız gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
