@@ -197,7 +197,7 @@ export default function Contact() {
                                     </label>
                                     <textarea
                                         {...register("message")}
-                                        placeholder="Bize nasıl yardımcı olabiliriz?"
+                                        placeholder="Size nasıl yardımcı olabiliriz?"
                                         rows={4}
                                         className="input textarea"
                                     />
