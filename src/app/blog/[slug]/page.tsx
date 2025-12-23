@@ -1,26 +1,28 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getAllPosts, getPostBySlug, getRelatedPosts, formatDate } from "@/lib/blog";
-import BlogCard from "@/app/components/blog/BlogCard";
+import { getPostBySlug, getRelatedPosts, getAllPostSlugs, formatDate, SanityPost } from "@/lib/sanity";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import { Metadata } from "next";
-import { Clock, ChevronRight, Share2 } from "lucide-react";
+import { Clock, ChevronRight, Share2, Calendar, ArrowRight } from "lucide-react";
 
 interface PageProps {
     params: Promise<{ slug: string }>;
 }
 
+// Revalidate every hour
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
-    const posts = getAllPosts();
-    return posts.map((post) => ({
-        slug: post.slug,
+    const slugs = await getAllPostSlugs();
+    return slugs.map((slug) => ({
+        slug,
     }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    const post = getPostBySlug(slug);
+    const post = await getPostBySlug(slug);
 
     if (!post) {
         return {
@@ -35,21 +37,54 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             title: post.title,
             description: post.description,
             type: "article",
-            publishedTime: post.date,
+            publishedTime: post.publishedAt,
             authors: [post.author],
         },
     };
 }
 
+// Simple Blog Card for related posts
+function RelatedBlogCard({ post }: { post: SanityPost }) {
+    return (
+        <Link
+            href={`/blog/${post.slug.current}`}
+            className="group bg-white rounded-xl border border-[var(--border-gray)] overflow-hidden shadow-sm hover:shadow-lg hover:border-[var(--primary-blue)] transition-all"
+        >
+            <div className="relative overflow-hidden bg-gradient-to-br from-[var(--primary-blue)] to-[var(--bright-cyan)] h-48">
+                <div className="absolute inset-0 flex items-center justify-center text-white/20 text-6xl font-bold">
+                    {post.title.charAt(0)}
+                </div>
+            </div>
+            <div className="p-6">
+                <h3 className="font-bold text-[var(--deep-navy)] group-hover:text-[var(--primary-blue)] transition-colors mb-2 line-clamp-2 text-lg">
+                    {post.title}
+                </h3>
+                <p className="text-[var(--medium-gray)] text-sm mb-4 line-clamp-2">
+                    {post.description}
+                </p>
+                <div className="flex items-center justify-between text-sm text-[var(--medium-gray)]">
+                    <span className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {formatDate(post.publishedAt)}
+                    </span>
+                    <span className="flex items-center gap-1 text-[var(--primary-blue)] font-medium group-hover:gap-2 transition-all">
+                        Oku <ArrowRight className="w-4 h-4" />
+                    </span>
+                </div>
+            </div>
+        </Link>
+    );
+}
+
 export default async function BlogPostPage({ params }: PageProps) {
     const { slug } = await params;
-    const post = getPostBySlug(slug);
+    const post = await getPostBySlug(slug);
 
     if (!post) {
         notFound();
     }
 
-    const relatedPosts = getRelatedPosts(slug, 3);
+    const relatedPosts = await getRelatedPosts(slug, 3);
 
     return (
         <>
@@ -81,11 +116,11 @@ export default async function BlogPostPage({ params }: PageProps) {
                             <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--medium-gray)]">
                                 <span>{post.author}</span>
                                 <span>•</span>
-                                <span>{formatDate(post.date)}</span>
+                                <span>{formatDate(post.publishedAt)}</span>
                                 <span>•</span>
                                 <span className="flex items-center gap-1">
                                     <Clock className="w-4 h-4" />
-                                    {post.read_time} dk okuma
+                                    {post.readTime} dk okuma
                                 </span>
                             </div>
                         </div>
@@ -94,7 +129,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                     {/* Article Content */}
                     <div className="container max-w-4xl py-12">
                         <div className="prose prose-lg max-w-none">
-                            {post.content.split("\n").map((paragraph, i) => {
+                            {post.content?.split("\n").map((paragraph, i) => {
                                 if (paragraph.startsWith("## ")) {
                                     return (
                                         <h2 key={i} className="text-2xl font-bold text-[var(--deep-navy)] mt-8 mb-4">
@@ -183,7 +218,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                             </h2>
                             <div className="grid md:grid-cols-3 gap-6">
                                 {relatedPosts.map((relatedPost) => (
-                                    <BlogCard key={relatedPost.slug} post={relatedPost} />
+                                    <RelatedBlogCard key={relatedPost._id} post={relatedPost} />
                                 ))}
                             </div>
                         </div>

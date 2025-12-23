@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { getAllPosts, getFeaturedPost, getCategories } from "@/lib/blog";
-import BlogCard from "@/app/components/blog/BlogCard";
+import { getAllPosts, getFeaturedPost, getCategories, formatDate, SanityPost, SanityCategory } from "@/lib/sanity";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import { Metadata } from "next";
+import { ArrowRight, Calendar, Clock } from "lucide-react";
 
 export const metadata: Metadata = {
     title: "Blog | ajanslokal - Dijital Pazarlama Rehberi",
@@ -11,11 +11,82 @@ export const metadata: Metadata = {
         "Google SEO, sosyal medya, yorum yönetimi ve yerel işletmeler için dijital pazarlama stratejileri",
 };
 
-export default function BlogPage() {
-    const posts = getAllPosts();
-    const featuredPost = getFeaturedPost();
-    const categories = getCategories();
+// Revalidate every hour
+export const revalidate = 3600;
+
+// Blog Card Component (inline to avoid import issues)
+function BlogCard({ post, featured = false }: { post: SanityPost; featured?: boolean }) {
+    return (
+        <Link
+            href={`/blog/${post.slug.current}`}
+            className={`group bg-white rounded-xl border border-[var(--border-gray)] overflow-hidden shadow-sm hover:shadow-lg hover:border-[var(--primary-blue)] transition-all ${featured ? "md:flex" : ""
+                }`}
+        >
+            <div
+                className={`relative overflow-hidden bg-gradient-to-br from-[var(--primary-blue)] to-[var(--bright-cyan)] ${featured ? "md:w-1/2 h-64 md:h-auto" : "h-48"
+                    }`}
+            >
+                <div className="absolute inset-0 flex items-center justify-center text-white/20 text-6xl font-bold">
+                    {post.title.charAt(0)}
+                </div>
+            </div>
+            <div className={`p-6 ${featured ? "md:w-1/2 md:flex md:flex-col md:justify-center" : ""}`}>
+                {post.category && (
+                    <span
+                        className="inline-block text-xs font-semibold px-2 py-1 rounded-full mb-3"
+                        style={{
+                            backgroundColor: `${post.category.color || '#0066FF'}20`,
+                            color: post.category.color || '#0066FF',
+                        }}
+                    >
+                        {post.category.name}
+                    </span>
+                )}
+                <h3
+                    className={`font-bold text-[var(--deep-navy)] group-hover:text-[var(--primary-blue)] transition-colors mb-2 line-clamp-2 ${featured ? "text-2xl" : "text-lg"
+                        }`}
+                >
+                    {post.title}
+                </h3>
+                <p className="text-[var(--medium-gray)] text-sm mb-4 line-clamp-2">
+                    {post.description}
+                </p>
+                <div className="flex items-center justify-between text-sm text-[var(--medium-gray)]">
+                    <div className="flex items-center gap-4">
+                        <span className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {formatDate(post.publishedAt)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {post.readTime} dk
+                        </span>
+                    </div>
+                    <span
+                        className="flex items-center gap-1 text-[var(--primary-blue)] font-medium group-hover:gap-2 transition-all"
+                    >
+                        Oku <ArrowRight className="w-4 h-4" />
+                    </span>
+                </div>
+            </div>
+        </Link>
+    );
+}
+
+export default async function BlogPage() {
+    const [posts, featuredPost, categories] = await Promise.all([
+        getAllPosts(),
+        getFeaturedPost(),
+        getCategories(),
+    ]);
+
     const regularPosts = posts.filter((post) => !post.featured);
+
+    // Count posts per category
+    const categoryWithCounts = categories.map(cat => ({
+        ...cat,
+        count: posts.filter(p => p.category?.slug === cat.slug.current).length
+    }));
 
     return (
         <>
@@ -55,11 +126,17 @@ export default function BlogPage() {
                                     <h2 className="text-sm font-semibold text-[var(--medium-gray)] uppercase tracking-wider mb-6">
                                         Son Yazılar
                                     </h2>
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        {regularPosts.map((post) => (
-                                            <BlogCard key={post.slug} post={post} />
-                                        ))}
-                                    </div>
+                                    {regularPosts.length > 0 ? (
+                                        <div className="grid md:grid-cols-2 gap-6">
+                                            {regularPosts.map((post) => (
+                                                <BlogCard key={post._id} post={post} />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-[var(--medium-gray)]">
+                                            Henüz blog yazısı yok. Yakında yeni içerikler eklenecek!
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
@@ -70,27 +147,33 @@ export default function BlogPage() {
                                     <h3 className="font-bold text-[var(--deep-navy)] mb-4">
                                         Kategoriler
                                     </h3>
-                                    <ul className="space-y-3">
-                                        {categories.map((category) => (
-                                            <li key={category.slug}>
-                                                <Link
-                                                    href={`/blog/kategori/${category.slug}`}
-                                                    className="flex items-center justify-between text-[var(--dark-slate)] hover:text-[var(--primary-blue)] transition-colors"
-                                                >
-                                                    <span className="flex items-center gap-2">
-                                                        <span
-                                                            className="w-2 h-2 rounded-full"
-                                                            style={{ backgroundColor: category.color }}
-                                                        />
-                                                        {category.name}
-                                                    </span>
-                                                    <span className="text-sm text-[var(--medium-gray)]">
-                                                        ({category.count})
-                                                    </span>
-                                                </Link>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    {categoryWithCounts.length > 0 ? (
+                                        <ul className="space-y-3">
+                                            {categoryWithCounts.map((category) => (
+                                                <li key={category._id}>
+                                                    <Link
+                                                        href={`/blog/kategori/${category.slug.current}`}
+                                                        className="flex items-center justify-between text-[var(--dark-slate)] hover:text-[var(--primary-blue)] transition-colors"
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <span
+                                                                className="w-2 h-2 rounded-full"
+                                                                style={{ backgroundColor: category.color }}
+                                                            />
+                                                            {category.name}
+                                                        </span>
+                                                        <span className="text-sm text-[var(--medium-gray)]">
+                                                            ({category.count})
+                                                        </span>
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p className="text-[var(--medium-gray)] text-sm">
+                                            Kategoriler yükleniyor...
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* CTA */}
