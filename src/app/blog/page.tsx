@@ -83,10 +83,18 @@ export default async function BlogPage() {
     const regularPosts = posts.filter((post) => !post.featured);
 
     // Count posts per category
-    const categoryWithCounts = categories.map(cat => ({
-        ...cat,
-        count: posts.filter(p => p.category?.slug === cat.slug.current).length
-    }));
+    const categoryWithCounts = categories.map(cat => {
+        const catSlug = cat.slug.current;
+        return {
+            ...cat,
+            count: posts.filter(p => {
+                const postCatSlug = typeof p.category?.slug === 'string'
+                    ? p.category.slug
+                    : p.category?.slug?.current;
+                return postCatSlug === catSlug;
+            }).length
+        };
+    });
 
     return (
         <>

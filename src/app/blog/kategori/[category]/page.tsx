@@ -100,10 +100,18 @@ export default async function CategoryPage({ params }: PageProps) {
     }
 
     // Calculate counts for each category
-    const categoriesWithCounts = allCategories.map(cat => ({
-        ...cat,
-        count: allPosts.filter(p => p.category?.slug === cat.slug.current).length
-    }));
+    const categoriesWithCounts = allCategories.map(cat => {
+        const catSlug = cat.slug.current;
+        return {
+            ...cat,
+            count: allPosts.filter(p => {
+                const postCatSlug = typeof p.category?.slug === 'string'
+                    ? p.category.slug
+                    : p.category?.slug?.current;
+                return postCatSlug === catSlug;
+            }).length
+        };
+    });
 
     return (
         <>
