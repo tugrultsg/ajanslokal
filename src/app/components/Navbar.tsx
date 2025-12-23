@@ -6,12 +6,12 @@ import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
-    { name: "Ana Sayfa", href: "#hero" },
-    { name: "Hizmetlerimiz", href: "#services" },
-    { name: "Çözümler", href: "#how-it-works" },
-    { name: "Fiyatlandırma", href: "#pricing" },
-    { name: "Hakkımızda", href: "#why-us" },
-    { name: "İletişim", href: "#contact" },
+    { name: "Ana Sayfa", href: "/#hero" },
+    { name: "Hizmetlerimiz", href: "/#services" },
+    { name: "Çözümler", href: "/#how-it-works" },
+    { name: "Fiyatlandırma", href: "/#pricing" },
+    { name: "Hakkımızda", href: "/#why-us" },
+    { name: "İletişim", href: "/#contact" },
 ];
 
 export default function Navbar() {
@@ -60,7 +60,7 @@ export default function Navbar() {
 
                     {/* CTA Button */}
                     <div className="hidden lg:flex items-center gap-4">
-                        <a href="#contact" className="btn btn-primary">
+                        <a href="/#contact" className="btn btn-primary">
                             Demo Talep Et
                         </a>
                     </div>
@@ -103,7 +103,7 @@ export default function Navbar() {
                             >
                                 Blog
                             </Link>
-                            <a href="#contact" onClick={handleLinkClick} className="btn btn-primary mt-2 text-center">
+                            <a href="/#contact" onClick={handleLinkClick} className="btn btn-primary mt-2 text-center">
                                 Demo Talep Et
                             </a>
                         </div>
