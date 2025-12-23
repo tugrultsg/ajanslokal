@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import GoogleAnalytics from "./components/GoogleAnalytics";
+import ScrollToHash from "./components/ScrollToHash";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -42,6 +43,7 @@ export default function RootLayout({
     <html lang="tr" className={plusJakartaSans.variable}>
       <body className={plusJakartaSans.className}>
         <GoogleAnalytics />
+        <ScrollToHash />
         {children}
       </body>
     </html>
